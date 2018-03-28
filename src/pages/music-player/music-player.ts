@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
-import { Media, MediaObject } from '@ionic-native/media';
+
+import { NativeAudio } from '@ionic-native/native-audio';
 /**
  * Generated class for the MusicPlayerPage page.
  *
@@ -15,26 +16,27 @@ import { Media, MediaObject } from '@ionic-native/media';
 })
 export class MusicPlayerPage {
  public music= [];
- private songMedia: MediaObject= null;
+ private songMedia = null;
   private isPaused= false;
   constructor(
-    private media: Media,
+    private nativeAudio: NativeAudio,
     public navCtrl: NavController,
     public navParams: NavParams) {
   }
 
   ionViewDidLoad() {
    this.music= this.navParams.get("music");
-   
+   //this.nativeAudio.preloadSimple({{music.id}}, 'music.music_url').then(onSuccess, onError);
+   this.nativeAudio.preloadComplex(this.music["id"], this.music["music_url"],1,1,0),() => console.log('this.music["id"] is done playing');
+
   }
 
   playMusic(){
     if(this.songMedia=== null){
-      this.songMedia= this.media.create(this.media["music_url"]);
-      this.songMedia.play();
+      this.songMedia= this.nativeAudio.play(this.music["id"], () => console.log('this.music["id"] is done playing'));
     }else{
       if(this.isPaused === true){
-        this.songMedia.play();
+        this.songMedia= this.nativeAudio.play(this.music["id"], () => console.log('this.music["id"] is again playing'));
         this.isPaused= false;
       }
     }
@@ -42,14 +44,14 @@ export class MusicPlayerPage {
   }
   stopMusic(){
     if(this.songMedia !== null){
-      this.songMedia.pause();
+     this.nativeAudio.stop(this.music["id"]), () => console.log('this.music["id"] is done stop');
+     this.nativeAudio.unload(this.music["id"]), () => console.log('this.music["id"] is done unload');
       this.isPaused = true;
     }
   }
  pauseMusic(){
   if(this.songMedia !== null){
-    this.songMedia.stop();
-    this.songMedia.release();
+    this.nativeAudio.stop(this.music["id"]), () => console.log('this.music["id"] is Pause');
     this.songMedia = null;
   }
  }
