@@ -1,0 +1,138 @@
+
+755 440 129 (12:05 PM):
+import { Component, OnInit } from '@angular/core';
+import * as jQuery from 'jquery';
+import { AlertService, SearchJobService, ApplyJobService, InviteJobService } from '../_services/index';
+import { User } from '../_models/index';
+import { Router } from '@angular/router';
+
+import { AppConfig } from '../app.config';
+
+import { ActivatedRoute } from '@angular/router';
+import { Http, Headers, RequestOptions, Response } from '@angular/http';
+
+const URL = 'http://127.0.0.1:8000/fileupload/';
+
+@Component({
+    moduleId: module.id,
+    selector: 'view_invited_project',
+    templateUrl: './viewinvite.component.html',
+    styleUrls: ['./viewinvite.component.css']
+})
+
+export class ViewInviteProject implements OnInit {
+    currentUser: User;
+    model: any = {};
+    private applyJob;
+    loading = false;
+    id: number;
+    ratetext: string = '';
+    private jobdetail;
+    private sub: any;
+    constructor(
+        private router: Router,
+        private searchJobService: SearchJobService,
+        private applyJobService: ApplyJobService,
+        private inviteJobService: InviteJobService,
+        private alertService: AlertService,
+        private route: ActivatedRoute,
+        private http: Http,
+        private _appConfig: AppConfig
+    ) {
+        this.currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        this.model.user = this.currentUser['user'].id;
+    }
+
+    ngOnInit() {
+        this.sub = this.route.params.subscribe(params => {
+            this.id = +params['id'];
+        });
+
+        if (this.id) {
+            let response;
+            this.getJobById().subscribe(
+
+                jobdetail => { response = jobdetail; },
+                error => { console.log("Error Happened!") },
+                () => {
+                    this.jobdetail = response;
+                    // console.log(this.jobdetail);
+                    this.model.project_id = this.jobdetail.project_id;
+                          if (this.jobdetail.jobtype == "Fixed") {
+                                this.ratetext = "$";
+                            } else {
+                                this.ratetext = "$/Hour";
+                            }
+                    // this.model = this.jobdetail;
+                    // this.model.skills = JSON.parse(this.jobdetail.skills);
+                });
+
+            let result;
+            this.inviteJobService.filterForMessage(this.id).subscribe(
+                applyJobService => { result = applyJobService; },
+                error => { console.log("Error Happened!") },
+                () => {
+                    this.applyJob = result[0].message;
+                    this.model.id = result[0].id;
+                    // console.log(result);
+                });
+        }
+    }
+
+    fileChange(event) {
+        let fileList: FileList = event.target.files;
+        if (fileList.length > 0) {
+            let file: File = fileList[0];
+            let formData: FormData = new FormData();
+            formData.append('image', file, file.name);
+            // console.log(file.name);
+            this.model.fileAttached = file.name;
+            let headers = new Headers();
+            // console.log(file.name);
+            // headers.append('Content-Type', 'multipart/form-data');
+            // headers.append('enctype', 'multipart/form-data');
+            // headers.append('Accept', 'application/json');
+            // let options = new RequestOptions({ headers: headers });
+            // this.http.post( URL , formData, options)
+            this.http.post(this._appConfig.apiUrl + 'fileupload/', formData)
+                // console.log("file uploaded");
+                // .map(res => res.json())
+                .subscribe((success) => alert('Uploaded Successfuly!'), (error) => alert(error));
+        }
+    }
+
+    private getJobById() {
+        return this.searchJobService.getById(this.id);
+    }
+
+    acceptProject() {
+        // this.loading = true;
+        this.model.status = "applied"
+        this.inviteJobService.update(this.model)
+            .subscribe(
+            data => {
+                this.alertService.success('Accepted!', true);
+                this.router.navigate(['/proposals']);
+            },
+            error => {
+                // this.alertService.error(error);
+                this.alertService.error(error._body);
+                this.loading = false;
+            });
+    }
+    declneProject() {
+        this.model.status = "declined"
+        this.inviteJobService.update(this.model)
+            .subscribe(
+            data => {
+                this.alertService.success('Declined!', true);
+                this.router.navigate(['/proposals']);
+            },
+            error => {
+                // this.alertService.error(error);
+                this.alertService.error(error._body);
+                this.loading = false;
+            });
+    }
+}
+

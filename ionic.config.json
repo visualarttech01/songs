@@ -1,0 +1,8 @@
+{
+  "name": "music",
+  "app_id": "4d88e5ee",
+  "type": "ionic-angular",
+  "integrations": {
+    "cordova": {}
+  }
+}
