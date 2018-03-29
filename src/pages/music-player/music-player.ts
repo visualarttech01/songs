@@ -18,6 +18,7 @@ export class MusicPlayerPage {
  public music= [];
  private songMedia = null;
   private isPaused= false;
+  public test;
   constructor(
     private nativeAudio: NativeAudio,
     public navCtrl: NavController,
@@ -33,7 +34,9 @@ export class MusicPlayerPage {
 
   playMusic(){
     if(this.songMedia=== null){
-      this.songMedia= this.nativeAudio.play(this.music["id"], () => console.log('this.music["id"] is done playing'));
+     
+     this.songMedia= this.nativeAudio.play(this.music["id"], () => console.log('this.music["id"] is done playing'));
+     this.test="music is playing"; 
     }else{
       if(this.isPaused === true){
         this.songMedia= this.nativeAudio.play(this.music["id"], () => console.log('this.music["id"] is again playing'));
@@ -55,6 +58,7 @@ export class MusicPlayerPage {
     this.songMedia = null;
   }
  }
+
 
 
 }
